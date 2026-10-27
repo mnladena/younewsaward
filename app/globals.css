@@ -350,6 +350,9 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
 .admin h2 { font: 400 24px/1.2 var(--serif); margin: 40px 0 12px; }
 .admin__meta { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; color: var(--muted); }
 .admin__meta a { color: var(--blue); text-decoration: underline; }
+.admin__filter { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+.admin__filter a { padding: 4px 12px; border: 1px solid rgba(17, 18, 24, .3); border-radius: 999px; color: var(--ink); }
+.admin__filter a[aria-current] { background: var(--navy); border-color: var(--navy); color: #fff; }
 .admin ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
 .admin li { padding: 16px; background: #fff; border: 1px solid rgba(17, 18, 24, .12); border-left: 4px solid var(--gold); }
 .admin li.approved { border-left-color: #2e7d32; }

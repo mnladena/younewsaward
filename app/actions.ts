@@ -32,6 +32,14 @@ export async function setGreetingStatus(id: number, status: Status) {
   refreshPublic();
 }
 
+// Permanent delete; the admin UI asks for confirmation first.
+export async function deleteGreeting(id: number) {
+  await requireAdmin();
+  if (!Number.isInteger(id)) throw new Error('Bad request');
+  await sql('DELETE FROM greetings WHERE id = $1', [id]);
+  refreshPublic();
+}
+
 export async function addVideo(_prev: FormState, data: FormData): Promise<FormState> {
   await requireAdmin();
   const parsed = parseVideo(data);
