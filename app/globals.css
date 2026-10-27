@@ -327,7 +327,8 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
   .display { font-size: 44px; line-height: 44px; }
   .board { padding: 24px; }
   .board--empty { padding-block: 48px; }
-  .board__intro, .idx-hero { flex-wrap: wrap; gap: 16px; }
+  .board__intro, .idx-hero { flex-wrap: wrap; align-items: flex-start; gap: 16px; }
+  .board__intro .btn, .idx-hero .btn { flex-basis: 100%; }
   .board__intro .quote-mark, .idx-hero .quote-mark { height: 60px; font-size: 110px; line-height: 100px; }
   .board__title, .idx-hero .board__title { font-size: 28px; line-height: 36px; }
   .cards--preview, .cards--all { grid-template-columns: 1fr; }
