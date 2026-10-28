@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { Footer, GreetingCard, SubNav } from '@/components/site';
+import { Footer, GreetingCard, GreetingStory, SubNav } from '@/components/site';
 import { sql, type Greeting } from '@/lib/db';
 
 export const metadata: Metadata = { title: 'Cerita hangat untuk Papi — YOUNEWS AWARDS' };
@@ -19,6 +19,7 @@ export default async function Ucapan() {
               <h1 className="board__title">Cerita hangat untuk Papi.</h1>
               <p className="board__desc">Ucapan, kenangan, dan doa dari teman-teman yang tumbuh bersama Papi.</p>
             </div>
+            {greetings.length > 0 && <GreetingStory greetings={greetings} />}
             <Link className="btn btn--dark" href="/#buku-tamu">Kirim ucapan</Link>
           </div>
         </div>

@@ -177,24 +177,150 @@ export function Music() {
  */
 export function Carousel({ children, label, auto }: { children: React.ReactNode; label: string; auto: boolean }) {
   const track = useRef<HTMLDivElement>(null);
+  const bar = useRef<HTMLElement>(null);
   const [paused, setPaused] = useState(false);
+  const [resting, setResting] = useState(false);
+  const restTimer = useRef(0);
+
+  // Each step lasts long enough to read the card that just slid in: ~3 words/s, 8–18 s.
+  const timeFor = (index: number) => {
+    const el = track.current!;
+    const cards = el.children;
+    const perView = Math.max(1, Math.round(el.clientWidth / (cards[0] as HTMLElement).offsetWidth));
+    const incoming = cards[Math.min(index + perView - 1, cards.length - 1)];
+    const words = incoming.querySelector('.card__msg')?.textContent?.split(/\s+/).length ?? 0;
+    bar.current?.style.setProperty('--dur', `${Math.min(18, Math.max(8, Math.min(words, 70) / 3))}s`);
+  };
+  useEffect(() => { if (auto) timeFor(0); }, [auto]);
+
   const next = () => {
     const el = track.current!;
+    const cards = el.children;
+    const step = cards.length > 1 ? (cards[1] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : el.clientWidth;
     const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-    el.scrollTo({ left: atEnd ? 0 : el.scrollLeft + (el.firstElementChild as HTMLElement).offsetWidth, behavior: 'smooth' });
+    const index = atEnd ? 0 : Math.round(el.scrollLeft / step) + 1;
+    timeFor(index);
+    // Hand-rolled glide: native smooth scroll is ~0.4 s and feels like a jolt. Snap is off while it runs.
+    const from = el.scrollLeft, to = Math.min(index * step, el.scrollWidth - el.clientWidth), start = performance.now();
+    el.style.scrollSnapType = 'none';
+    const frame = (now: number) => {
+      const t = Math.min(1, (now - start) / 1200);
+      el.scrollLeft = from + (to - from) * (1 - (1 - t) ** 4);
+      if (t < 1) requestAnimationFrame(frame); else el.style.scrollSnapType = '';
+    };
+    requestAnimationFrame(frame);
   };
+
+  // A swipe or wheel scroll means someone is reading: hold auto-advance until they've been idle for 15 s.
+  const rest = () => {
+    setResting(true);
+    clearTimeout(restTimer.current);
+    restTimer.current = window.setTimeout(() => setResting(false), 15000);
+  };
+  useEffect(() => () => clearTimeout(restTimer.current), []);
+
   return (
-    <div className={paused ? 'carousel is-paused' : 'carousel'}>
-      <div className="carousel__track" ref={track} role="region" aria-label={label} tabIndex={0}>{children}</div>
+    <div className={`carousel${paused ? ' is-paused' : ''}${resting ? ' is-resting' : ''}`}>
+      <div className="carousel__track" ref={track} role="region" aria-label={label} tabIndex={0}
+        onPointerDown={rest} onWheel={(e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) rest(); }}>{children}</div>
       {auto && (
         <div className="carousel__controls">
-          <span className="carousel__bar" aria-hidden="true"><i onAnimationIteration={next} /></span>
+          <span className="carousel__bar" aria-hidden="true"><i ref={bar} onAnimationIteration={next} /></span>
           <button className="btn btn--outline btn--sm" type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>
             {paused ? 'Putar' : 'Jeda'}
           </button>
         </div>
       )}
     </div>
+  );
+}
+
+/**
+ * Full-screen story mode (think Instagram Stories): one slide at a time with segment progress on top.
+ * Tap the left third to go back, anywhere else to go forward; ←/→ and Space work too. Loops, so it can run on a screen at the event.
+ */
+export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds: number[] }) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [index, setIndex] = useState<number | null>(null); // null = closed
+  const [paused, setPaused] = useState(false);
+  const open = index !== null;
+  const go = (k: number) => setIndex((k + slides.length) % slides.length);
+
+  useEffect(() => {
+    if (!open) return;
+    dialog.current!.showModal();
+    return reducedMotion() ? undefined : goldDust(dialog.current!.querySelector('canvas')!, 90);
+  }, [open]);
+
+  return (
+    <>
+      <button className="btn btn--gold" type="button" onClick={() => { setIndex(0); if (bgm()?.paused) playMusic(); }}>
+        Putar semua ucapan
+      </button>
+      {open && (
+        <dialog className={paused ? 'story is-paused' : 'story'} ref={dialog} aria-label="Mode cerita: ucapan untuk Papih"
+          onClose={() => { setIndex(null); setPaused(false); }}
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowRight') go(index + 1);
+            else if (e.key === 'ArrowLeft') go(index - 1);
+            else if (e.key === ' ') { e.preventDefault(); setPaused(!paused); }
+          }}>
+          <canvas className="sparkle" aria-hidden="true" />
+          <div className="story__head">
+            <div className="story__bar" aria-hidden="true">
+              {slides.map((_, k) => (
+                <span key={k} className={k < index ? 'is-done' : undefined}>
+                  {k === index && <i key={index} style={{ '--dur': `${seconds[k]}s` } as React.CSSProperties} onAnimationEnd={() => go(index + 1)} />}
+                </span>
+              ))}
+            </div>
+            <div className="story__top">
+              <span className="story__count">{String(index + 1).padStart(2, '0')} / {String(slides.length).padStart(2, '0')}</span>
+              <button type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>{paused ? 'Putar' : 'Jeda'}</button>
+              <button type="button" onClick={() => dialog.current?.close()}>Tutup ✕</button>
+            </div>
+          </div>
+          <div className="story__stage" aria-live="polite" onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect();
+            go(e.clientX - r.left < r.width / 3 ? index - 1 : index + 1);
+          }}>
+            {slides[index]}
+          </div>
+        </dialog>
+      )}
+    </>
+  );
+}
+
+/** Greeting card whose message is height-clamped; if it overflows, "Baca selengkapnya" opens the full text in a <dialog>. */
+export function Clipping({ children, label }: { children: React.ReactNode; label: string }) {
+  const card = useRef<HTMLElement>(null);
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [clamped, setClamped] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const msg = card.current!.querySelector<HTMLElement>('.card__msg')!;
+    // Only clamped when the box has hit its max-height: the drop cap's glyph overflows a little even on short texts.
+    const measure = () => setClamped(msg.clientHeight >= parseFloat(getComputedStyle(msg).maxHeight) - 1 && msg.scrollHeight > msg.clientHeight + 2);
+    const ro = new ResizeObserver(measure);
+    ro.observe(msg);
+    return () => ro.disconnect();
+  }, []);
+  useEffect(() => { if (open) dialog.current?.showModal(); }, [open]);
+
+  return (
+    <article className={clamped ? 'card is-clamped' : 'card'} ref={card}>
+      {children}
+      {clamped && <button className="card__more" type="button" onClick={() => setOpen(true)}>Baca selengkapnya</button>}
+      {open && (
+        <dialog className="vmodal" ref={dialog} aria-label={label} onClose={() => setOpen(false)}
+          onClick={(e) => { if (e.target === e.currentTarget) e.currentTarget.close(); }}>
+          <button className="vmodal__close" type="button" onClick={() => dialog.current?.close()}>Tutup ✕</button>
+          <div className="card card--full">{children}</div>
+        </dialog>
+      )}
+    </article>
   );
 }
 

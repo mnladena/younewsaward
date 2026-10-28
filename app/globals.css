@@ -151,22 +151,59 @@ button, input, textarea { font: inherit; color: inherit; }
 .carousel__track:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
 .carousel__controls { display: flex; align-items: center; gap: 20px; }
 .carousel__bar { flex: 1; height: 2px; overflow: hidden; background: rgba(17, 18, 24, .12); }
-.carousel__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; animation: progress 6s linear infinite; }
+.carousel__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; animation: progress var(--dur, 10s) linear infinite; }
 .carousel.is-paused .carousel__bar i,
+.carousel.is-resting .carousel__bar i,
 .carousel__track:hover + .carousel__controls .carousel__bar i,
 .carousel__track:focus-visible + .carousel__controls .carousel__bar i { animation-play-state: paused; }
 /* cards rise in as they scroll into the track; browsers without scroll timelines just show them */
 @supports (animation-timeline: view()) {
   .carousel__track > * { animation: card-in linear both; animation-timeline: view(inline); animation-range: entry 10% entry 90%; }
 }
-.card { display: flex; flex-direction: column; justify-content: space-between; padding: 28px; background: #fff; border: 1px solid rgba(17, 18, 24, .12); font-family: var(--card-font); transition: transform .35s var(--ease-out), box-shadow .35s; }
+/* greeting card = newspaper clipping: double rule, kicker, serif body with gold drop cap */
+.card { --ink-soft: var(--muted); display: flex; flex-direction: column; gap: 16px; padding: 24px 28px 28px; background: #fff; border: 1px solid rgba(17, 18, 24, .12); border-top: 4px double var(--ink); font-family: var(--card-font); transition: transform .35s var(--ease-out), box-shadow .35s; }
 .card:hover { transform: translateY(-4px); box-shadow: 0 18px 40px -24px rgba(4, 16, 59, .35); }
-.card__quote { font: 400 48px/36px var(--lora); color: var(--gold); }
-.card__msg { margin-top: 8px; font-size: 16px; line-height: 24.8px; }
-.card__from { display: flex; flex-direction: column; gap: 6px; padding-top: 24px; }
-.card__from::before { content: ''; width: 28px; height: 1px; background: var(--gold); }
+.card__kicker { padding-bottom: 12px; border-bottom: 1px solid rgba(17, 18, 24, .12); font: 700 10.5px/16px var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--ink-soft); }
+/* pre-line keeps the sender's Enter line breaks; max-height clamps to 7 lines (a block, so ::first-letter still works) */
+.card__msg { max-height: calc(1.65em * 7); overflow: hidden; font: 400 17px/1.65 var(--lora); white-space: pre-line; }
+.card__msg::first-letter { float: left; margin: 7px 10px 0 0; font: 400 58px/.8 var(--lora); color: var(--gold); }
+.is-clamped > .card__msg { -webkit-mask-image: linear-gradient(#000 65%, transparent); mask-image: linear-gradient(#000 65%, transparent); }
+.card__more { order: 1; align-self: flex-start; margin-top: -8px; padding: 4px 0; border: 0; border-bottom: 1px solid var(--gold); background: none; color: inherit; font: 700 11px/16px var(--sans); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
+.card__from { order: 2; display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 8px; }
+.card__avatar { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 50%; background: var(--navy); color: var(--gold-light); font: 700 13px/1 var(--sans); letter-spacing: .04em; }
 .card__name { font: 700 14px/21px var(--arimo); }
-.card__role { font-size: 12px; line-height: 18px; color: var(--muted); }
+/* every 4th card is a navy "highlight" to break the run of white */
+.carousel__track > .card:nth-child(4n), .cards > .card:nth-child(4n) { --ink-soft: rgba(245, 240, 229, .6); background: var(--navy); border-color: var(--navy); border-top-color: var(--gold); color: var(--cream); }
+.carousel__track > .card:nth-child(4n) .card__kicker, .cards > .card:nth-child(4n) .card__kicker { border-bottom-color: rgba(245, 240, 229, .16); }
+.carousel__track > .card:nth-child(4n) .card__avatar, .cards > .card:nth-child(4n) .card__avatar { background: var(--gold); color: var(--navy); }
+/* story mode: full-screen <dialog>, segment progress, one greeting per screen */
+.story { position: fixed; inset: 0; width: 100vw; height: 100dvh; max-width: none; max-height: none; margin: 0; padding: 0; border: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 35%, var(--navy-2), var(--navy) 70%); color: var(--cream); }
+.story[open] { display: grid; grid-template-rows: auto 1fr; animation: modal-in .45s var(--ease-out); }
+.story::backdrop { background: var(--navy); }
+.story .sparkle { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.story__head { position: relative; display: grid; gap: 10px; padding: 20px var(--gutter) 0; }
+.story__bar { display: flex; gap: 4px; }
+.story__bar span { flex: 1; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(245, 240, 229, .22); }
+.story__bar span.is-done { background: var(--gold); }
+.story__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; animation: progress var(--dur) linear forwards; }
+.story.is-paused .story__bar i { animation-play-state: paused; }
+.story__top { display: flex; align-items: center; gap: 24px; }
+.story__count { flex: 1; font: 700 11.52px/17.28px var(--sans); letter-spacing: .22em; color: var(--gold-light); }
+.story__top button { padding: 10px 0; border: 0; background: none; color: var(--gold-light); font: 700 11.52px/17.28px var(--sans); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
+.story__stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 24px var(--gutter) 56px; cursor: pointer; user-select: none; }
+.story__slide { width: min(780px, 100%); max-height: 100%; overflow-y: auto; animation: fade-up .7s var(--ease-out) both; }
+.story .card__kicker { margin-bottom: 24px; border-bottom-color: rgba(245, 240, 229, .16); color: rgba(245, 240, 229, .6); }
+.story .card__msg { max-height: none; font-size: clamp(22px, 2.6vw, 34px); line-height: 1.5; }
+.story .card__msg::first-letter { margin: .1em .14em 0 0; font-size: 3.1em; }
+.story__slide.is-long .card__msg { font-size: clamp(18px, 1.8vw, 24px); }
+.story .card__from { margin-top: 36px; }
+.story .card__avatar { width: 46px; height: 46px; background: var(--gold); color: var(--navy); font-size: 15px; }
+.story .card__name { font-size: 16px; }
+
+/* full text inside the read-more popup */
+.card--full { width: min(640px, 92vw); max-height: 84vh; overflow-y: auto; padding: 32px 36px 36px; color: var(--ink); }
+.card--full .card__msg { max-height: none; font-size: 18px; }
+.card--full:hover { transform: none; box-shadow: none; }
 
 /* ---------- 03 pesan ---------- */
 .pesan { display: flex; flex-direction: column; align-items: center; gap: 64px; padding: 100px 0 64px; background: var(--navy); color: #fff; overflow: hidden; }
@@ -355,6 +392,7 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
   .gallery__item[aria-hidden] { display: none; }
   .carousel__controls { display: none; }
   .music.is-on span { height: 12px; }
+  .story__bar i { animation: none; } /* no auto-advance: the shortened animation would otherwise skip every slide at once */
   .carousel__track > * { animation: none; }
 }
 

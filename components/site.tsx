@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { VideoPopup } from '@/components/effects';
+import { Clipping, Story, VideoPopup } from '@/components/effects';
 import type { Greeting, Video } from '@/lib/db';
 
 export const Logo = ({ alt = 'YOU-NEWS AWARD' }: { alt?: string }) => (
@@ -26,18 +26,36 @@ export function SubNav() {
   );
 }
 
-export function GreetingCard({ g }: { g: Pick<Greeting, 'name' | 'team' | 'message'> }) {
+const initials = (name: string) => name.split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+type G = Pick<Greeting, 'name' | 'team' | 'message'>;
+
+// Shared by the card, its read-more popup and story mode.
+const GreetingBody = ({ g }: { g: G }) => (
+  <>
+    <p className="card__kicker">{g.team ? `${g.team} · Untuk Papih` : 'Ucapan untuk Papih'}</p>
+    <p className="card__msg">{g.message}</p>
+    <div className="card__from">
+      <span className="card__avatar" aria-hidden="true">{g.name ? initials(g.name) : '“'}</span>
+      <p className="card__name">{g.name || 'Anonim'}</p>
+    </div>
+  </>
+);
+
+/** Greeting styled as a newspaper clipping; long messages are clamped with a "read more" popup. */
+export function GreetingCard({ g }: { g: G }) {
+  return <Clipping label={`Ucapan dari ${g.name || 'Anonim'}`}><GreetingBody g={g} /></Clipping>;
+}
+
+/** "Putar semua ucapan": every greeting full screen, one at a time; each shows ~3 words/s (6–20 s). */
+export function GreetingStory({ greetings }: { greetings: G[] }) {
   return (
-    <article className="card">
-      <div>
-        <p className="card__quote" aria-hidden="true">“</p>
-        <p className="card__msg">{g.message}</p>
-      </div>
-      <div className="card__from">
-        <p className="card__name">{g.name || 'Anonim'}</p>
-        {g.team && <p className="card__role">{g.team}</p>}
-      </div>
-    </article>
+    <Story
+      slides={greetings.map((g, i) => (
+        <div key={i} className={g.message.length > 400 ? 'story__slide is-long' : 'story__slide'}><GreetingBody g={g} /></div>
+      ))}
+      seconds={greetings.map((g) => Math.min(20, Math.max(6, g.message.split(/\s+/).length / 3)))}
+    />
   );
 }
 
