@@ -388,7 +388,6 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
   .gallery__item[aria-hidden] { display: none; }
   .carousel__controls { display: none; }
   .music.is-on span { height: 12px; }
-  .story__bar i { animation: none; } /* no auto-advance: the shortened animation would otherwise skip every slide at once */
   .carousel__track > * { animation: none; }
 }
 

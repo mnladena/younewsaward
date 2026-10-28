@@ -252,6 +252,17 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
     return reducedMotion() ? undefined : goldDust(dialog.current!.querySelector('canvas')!, 90);
   }, [open]);
 
+  // Auto-advance runs on a timer, not on the progress bar's animationend: Safari doesn't reliably deliver that event
+  // (and Reduce Motion shortens the animation), so the bar is only a visual. Time spent survives a pause.
+  const spent = useRef({ index: -1, ms: 0 });
+  useEffect(() => {
+    if (index === null || paused) return;
+    if (spent.current.index !== index) spent.current = { index, ms: 0 };
+    const start = performance.now();
+    const timer = setTimeout(() => go(index + 1), seconds[index] * 1000 - spent.current.ms);
+    return () => { clearTimeout(timer); spent.current.ms += performance.now() - start; };
+  }, [index, paused]);
+
   return (
     <>
       <button className="btn btn--gold" type="button" onClick={() => { setIndex(0); if (bgm()?.paused) playMusic(); }}>
@@ -270,7 +281,7 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
             <div className="story__bar" aria-hidden="true">
               {slides.map((_, k) => (
                 <span key={k} className={k < index ? 'is-done' : undefined}>
-                  {k === index && <i key={index} style={{ '--dur': `${seconds[k]}s` } as React.CSSProperties} onAnimationEnd={() => go(index + 1)} />}
+                  {k === index && <i key={index} style={{ '--dur': `${seconds[k]}s` } as React.CSSProperties} />}
                 </span>
               ))}
             </div>
