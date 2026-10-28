@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Arimo, Inter, Lora } from 'next/font/google';
+import { Music } from '@/components/effects';
 import './globals.css';
 
 const lora = Lora({ subsets: ['latin'], weight: '400', style: ['normal', 'italic'], variable: '--font-lora' });
@@ -20,7 +21,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <script dangerouslySetInnerHTML={{ __html: bootScript }} />
       </head>
-      <body>{children}</body>
+      <body>{children}<Music /></body>
     </html>
   );
 }

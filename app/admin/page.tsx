@@ -66,6 +66,10 @@ export default async function Admin({ searchParams }: { searchParams: Promise<{ 
           <li key={v.id}>
             <p><b>{v.title}</b> — {[v.sender_name, v.sender_role].filter(Boolean).join(', ') || 'tanpa pengirim'}</p>
             <small><a href={v.url} target="_blank" rel="noreferrer">{v.url}</a></small>
+            <details className="admin__edit">
+              <summary>Edit</summary>
+              <VideoForm video={v} />
+            </details>
             <form className="admin__actions">
               <ConfirmButton action={deleteVideo.bind(null, v.id)} message="Hapus video ini dari situs? File di CDN tidak ikut terhapus.">Hapus</ConfirmButton>
             </form>

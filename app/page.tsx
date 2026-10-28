@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { GuestbookForm } from '@/components/GuestbookForm';
-import { Hero, LoadingScreen } from '@/components/effects';
+import { Carousel, Hero, LoadingScreen } from '@/components/effects';
 import { Footer, Gallery, GreetingCard, HomeVideoCard, Logo, fillSlots } from '@/components/site';
 import { sql, type Greeting, type Video } from '@/lib/db';
 
 // Static page, refreshed by revalidatePath() whenever admin approves a greeting or edits videos.
 export default async function Home() {
   const [greetings, videos] = await Promise.all([
-    sql<Greeting>("SELECT name, team, message FROM greetings WHERE status = 'approved' ORDER BY id LIMIT 5"),
+    sql<Greeting>("SELECT name, team, message FROM greetings WHERE status = 'approved' ORDER BY id DESC LIMIT 12"),
     sql<Video>('SELECT * FROM videos ORDER BY id LIMIT 3'),
   ]);
 
@@ -51,9 +51,9 @@ export default async function Home() {
               </div>
               {greetings.length > 0 && (
                 <>
-                  <div className="cards cards--preview">
+                  <Carousel label="Ucapan untuk Papih" auto={greetings.length > 3}>
                     {greetings.map((g, i) => <GreetingCard key={i} g={g} />)}
-                  </div>
+                  </Carousel>
                   <div className="board__more"><Link className="btn btn--outline" href="/ucapan">Selengkapnya</Link></div>
                 </>
               )}

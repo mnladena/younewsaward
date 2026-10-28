@@ -51,6 +51,19 @@ export async function addVideo(_prev: FormState, data: FormData): Promise<FormSt
   return { ok: true };
 }
 
+export async function updateVideo(_prev: FormState, data: FormData): Promise<FormState> {
+  await requireAdmin();
+  const id = Number(data.get('id'));
+  if (!Number.isInteger(id) || id < 1) return { error: 'Video tidak ditemukan.' };
+  const parsed = parseVideo(data);
+  if ('error' in parsed) return { error: parsed.error };
+  const v = parsed.value;
+  await sql('UPDATE videos SET url = $1, title = $2, sender_name = $3, sender_role = $4, poster = $5 WHERE id = $6',
+    [v.url, v.title, v.sender_name, v.sender_role, v.poster, id]);
+  refreshPublic();
+  return { ok: true };
+}
+
 export async function deleteVideo(id: number) {
   await requireAdmin();
   if (!Number.isInteger(id)) throw new Error('Bad request');

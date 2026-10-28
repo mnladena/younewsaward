@@ -1,8 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { YouTube } from '@/components/effects';
+import { VideoPopup } from '@/components/effects';
 import type { Greeting, Video } from '@/lib/db';
-import { youtubeId } from '@/lib/validate';
 
 export const Logo = ({ alt = 'YOU-NEWS AWARD' }: { alt?: string }) => (
   <Image src="/assets/logo.webp" alt={alt} width={137} height={55} />
@@ -42,11 +41,7 @@ export function GreetingCard({ g }: { g: Pick<Greeting, 'name' | 'team' | 'messa
   );
 }
 
-function Player({ v }: { v: Video }) {
-  const yt = youtubeId(v.url);
-  return yt ? <YouTube id={yt} title={v.title} poster={v.poster} />
-    : <video src={v.url} poster={v.poster ?? undefined} controls playsInline preload="metadata" />;
-}
+const Player = ({ v }: { v: Video }) => <VideoPopup url={v.url} title={v.title} poster={v.poster} />;
 
 // [width, height] of public/assets/gallery/papih-NN.jpg, in file order.
 const PHOTOS = [
