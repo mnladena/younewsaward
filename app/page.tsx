@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { GuestbookForm } from '@/components/GuestbookForm';
 import { Hero, LoadingScreen } from '@/components/effects';
-import { Footer, GreetingCard, HomeVideoCard, Logo, fillSlots } from '@/components/site';
+import { Footer, Gallery, GreetingCard, HomeVideoCard, Logo, fillSlots } from '@/components/site';
 import { sql, type Greeting, type Video } from '@/lib/db';
 
 // Static page, refreshed by revalidatePath() whenever admin approves a greeting or edits videos.
@@ -22,6 +22,7 @@ export default async function Home() {
 
       <main>
         <Hero />
+        <Gallery />
 
         <section className="cerita" id="cerita">
           <div className="container">

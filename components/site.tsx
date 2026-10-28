@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { YouTube } from '@/components/effects';
 import type { Greeting, Video } from '@/lib/db';
+import { youtubeId } from '@/lib/validate';
 
 export const Logo = ({ alt = 'YOU-NEWS AWARD' }: { alt?: string }) => (
   <Image src="/assets/logo.webp" alt={alt} width={137} height={55} />
@@ -40,9 +42,40 @@ export function GreetingCard({ g }: { g: Pick<Greeting, 'name' | 'team' | 'messa
   );
 }
 
-const Player = ({ v }: { v: Video }) => (
-  <video src={v.url} poster={v.poster ?? undefined} controls playsInline preload="metadata" />
-);
+function Player({ v }: { v: Video }) {
+  const yt = youtubeId(v.url);
+  return yt ? <YouTube id={yt} title={v.title} poster={v.poster} />
+    : <video src={v.url} poster={v.poster ?? undefined} controls playsInline preload="metadata" />;
+}
+
+// [width, height] of public/assets/gallery/papih-NN.jpg, in file order.
+const PHOTOS = [
+  [248, 248], [720, 540], [1256, 800], [604, 453], [604, 326], [604, 416], [604, 385], [600, 450],
+  [604, 402], [1600, 1066], [533, 800], [1536, 1152], [1536, 1152], [1536, 1536], [1280, 720], [891, 960],
+].map(([w, h], i) => ({ src: `/assets/gallery/papih-${String(i + 1).padStart(2, '0')}.jpg`, w, h }));
+const PHOTO_H = 260; // display height; CSS shrinks it on mobile
+
+/** Two endless photo strips moving in opposite directions; each row is rendered twice so translateX(-50%) loops seamlessly. */
+export function Gallery() {
+  return (
+    <section className="gallery" aria-label="Galeri foto Papih">
+      {[0, 1].map((r) => {
+        const row = PHOTOS.filter((_, i) => i % 2 === r);
+        return (
+          <div className="gallery__row" key={r}>
+            <div className={r ? 'gallery__track gallery__track--rev' : 'gallery__track'}>
+              {[0, 1].map((copy) => row.map((p) => (
+                <figure className="gallery__item" key={`${copy}${p.src}`} aria-hidden={copy ? true : undefined}>
+                  <Image src={p.src} alt="Kenangan bersama Papih" width={Math.round((p.w / p.h) * PHOTO_H)} height={PHOTO_H} />
+                </figure>
+              )))}
+            </div>
+          </div>
+        );
+      })}
+    </section>
+  );
+}
 
 /** Placeholder slots keep the designed grid filled until enough videos exist. */
 export const fillSlots = (videos: Video[], slots: number): (Video | null)[] =>

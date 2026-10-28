@@ -15,7 +15,7 @@ export function VideoForm() {
       const data = new FormData(e.currentTarget);
       startTransition(() => action(data));
     }}>
-      <label className="wide">URL video (MP4 H.264, https://) *<input name="url" type="url" required placeholder="https://cdn.example.com/pesan-01.mp4" /></label>
+      <label className="wide">URL video (YouTube/Shorts atau MP4 H.264, https://) *<input name="url" type="url" required placeholder="https://youtube.com/shorts/… atau https://cdn.example.com/pesan-01.mp4" /></label>
       <label>Judul *<input name="title" required maxLength={120} defaultValue="Pesan dari teman Papih" /></label>
       <label>URL poster (opsional)<input name="poster" type="url" placeholder="https://…/poster.jpg" /></label>
       <label>Nama pengirim<input name="sender_name" maxLength={80} /></label>

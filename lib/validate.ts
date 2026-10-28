@@ -39,6 +39,21 @@ export function parseVideo(data: Input): Result<{ url: string; title: string; se
   return { value: { url, title, sender_name: senderName || null, sender_role: senderRole || null, poster: poster || null } };
 }
 
+// YouTube video ID from watch, youtu.be, shorts or embed links; null for anything else (plain MP4).
+export function youtubeId(value: string): string | null {
+  try {
+    const url = new URL(value);
+    const host = url.hostname.replace(/^(www|m)\./, '');
+    const id = host === 'youtu.be' ? url.pathname.slice(1)
+      : host === 'youtube.com' || host === 'youtube-nocookie.com'
+        ? url.searchParams.get('v') ?? url.pathname.match(/^\/(?:shorts|embed|live)\/([^/]+)/)?.[1]
+        : null;
+    return id && /^[\w-]{11}$/.test(id) ? id : null;
+  } catch {
+    return null;
+  }
+}
+
 // Constant-time Basic auth check (any username, password from ADMIN_PASSWORD).
 export function isValidBasicAuth(header: string | null, password: string | undefined): boolean {
   if (!password || !header?.startsWith('Basic ')) return false;

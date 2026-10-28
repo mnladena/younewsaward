@@ -132,6 +132,21 @@ export function LoadingScreen() {
   );
 }
 
+/** Lite YouTube embed: thumbnail until clicked, so the heavy player iframe loads only on demand. */
+export function YouTube({ id, title, poster }: { id: string; title: string; poster: string | null }) {
+  const [playing, setPlaying] = useState(false);
+  if (playing) return (
+    <iframe src={`https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&playsinline=1`} title={title}
+      allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowFullScreen />
+  );
+  return (
+    <button className="vframe__yt" type="button" onClick={() => setPlaying(true)} aria-label={`Putar video: ${title}`}>
+      <img src={poster ?? `https://i.ytimg.com/vi/${id}/hqdefault.jpg`} alt="" loading="lazy" />
+      <span className="vframe__play" aria-hidden="true">▶</span>
+    </button>
+  );
+}
+
 /** Hero section: gold dust, cursor trail, mouse/scroll parallax via CSS vars. */
 export function Hero() {
   const ref = useRef<HTMLElement>(null);

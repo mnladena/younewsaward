@@ -1,7 +1,7 @@
 // Run: npm test  (Node >= 23.6 strips the TypeScript types natively)
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { isValidBasicAuth, parseGreeting, parseVideo } from '../lib/validate.ts';
+import { isValidBasicAuth, parseGreeting, parseVideo, youtubeId } from '../lib/validate.ts';
 
 const form = (obj) => ({ get: (k) => obj[k] ?? null });
 const basic = (s) => 'Basic ' + Buffer.from(s).toString('base64');
@@ -22,6 +22,20 @@ test('parseVideo', () => {
   assert.match(parseVideo(form({ url: 'https://cdn.test/a.mp4', title: ' ' })).error, /Judul/);
   assert.deepEqual(parseVideo(form({ url: 'https://cdn.test/a.mp4', title: 'Pesan' })).value,
     { url: 'https://cdn.test/a.mp4', title: 'Pesan', sender_name: null, sender_role: null, poster: null });
+});
+
+test('youtubeId', () => {
+  for (const url of [
+    'https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=10s',
+    'https://youtu.be/dQw4w9WgXcQ?si=abc',
+    'https://youtube.com/shorts/dQw4w9WgXcQ?feature=share',
+    'https://m.youtube.com/watch?v=dQw4w9WgXcQ',
+    'https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ',
+  ]) assert.equal(youtubeId(url), 'dQw4w9WgXcQ', url);
+  assert.equal(youtubeId('https://cdn.test/a.mp4'), null);
+  assert.equal(youtubeId('https://youtube.com/watch?v=bad"><x'), null); // ID goes into a URL, so shape is enforced
+  assert.equal(youtubeId('https://evilyoutube.com/watch?v=dQw4w9WgXcQ'), null);
+  assert.equal(youtubeId('not a url'), null);
 });
 
 test('isValidBasicAuth', () => {
