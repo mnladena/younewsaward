@@ -172,15 +172,15 @@ export function Music() {
 }
 
 /**
- * Card carousel: native scroll-snap handles swipe; each iteration of the CSS progress bar advances one card,
- * so hover/focus/pause only need to pause that animation (all in CSS) and the bar and slides never drift apart.
+ * Card carousel: native scroll-snap handles swipe, arrows step one card, and a rAF clock auto-advances.
+ * The clock (not a CSS animationiteration event, which Safari drops) drives the progress bar, so the two never drift.
+ * It holds while paused, mouse-hovered, keyboard-focused, a read-more popup is open, or 15 s after a swipe.
  */
 export function Carousel({ children, label, auto }: { children: React.ReactNode; label: string; auto: boolean }) {
   const track = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLElement>(null);
   const [paused, setPaused] = useState(false);
-  const [resting, setResting] = useState(false);
-  const restTimer = useRef(0);
+  const clock = useRef({ elapsed: 0, dur: 10000, hover: false, restUntil: 0 });
 
   // Each step lasts long enough to read the card that just slid in: ~3 words/s, 8–18 s.
   const timeFor = (index: number) => {
@@ -189,19 +189,23 @@ export function Carousel({ children, label, auto }: { children: React.ReactNode;
     const perView = Math.max(1, Math.round(el.clientWidth / (cards[0] as HTMLElement).offsetWidth));
     const incoming = cards[Math.min(index + perView - 1, cards.length - 1)];
     const words = incoming.querySelector('.card__msg')?.textContent?.split(/\s+/).length ?? 0;
-    bar.current?.style.setProperty('--dur', `${Math.min(18, Math.max(8, Math.min(words, 70) / 3))}s`);
+    clock.current.dur = Math.min(18, Math.max(8, Math.min(words, 70) / 3)) * 1000;
+    clock.current.elapsed = 0;
   };
-  useEffect(() => { if (auto) timeFor(0); }, [auto]);
 
-  const next = () => {
+  // Step one card either way, wrapping at both ends.
+  const go = (delta: number) => {
     const el = track.current!;
     const cards = el.children;
     const step = cards.length > 1 ? (cards[1] as HTMLElement).offsetLeft - (cards[0] as HTMLElement).offsetLeft : el.clientWidth;
-    const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 8;
-    const index = atEnd ? 0 : Math.round(el.scrollLeft / step) + 1;
-    timeFor(index);
+    const max = el.scrollWidth - el.clientWidth;
+    const from = el.scrollLeft;
+    const to = delta > 0 ? (from >= max - 8 ? 0 : Math.min(max, (Math.round(from / step) + 1) * step))
+      : (from <= 8 ? max : Math.max(0, (Math.round(from / step) - 1) * step));
+    timeFor(Math.round(to / step));
+    if (reducedMotion()) { el.scrollLeft = to; return; }
     // Hand-rolled glide: native smooth scroll is ~0.4 s and feels like a jolt. Snap is off while it runs.
-    const from = el.scrollLeft, to = Math.min(index * step, el.scrollWidth - el.clientWidth), start = performance.now();
+    const start = performance.now();
     el.style.scrollSnapType = 'none';
     const frame = (now: number) => {
       const t = Math.min(1, (now - start) / 1200);
@@ -211,22 +215,41 @@ export function Carousel({ children, label, auto }: { children: React.ReactNode;
     requestAnimationFrame(frame);
   };
 
-  // A swipe or wheel scroll means someone is reading: hold auto-advance until they've been idle for 15 s.
-  const rest = () => {
-    setResting(true);
-    clearTimeout(restTimer.current);
-    restTimer.current = window.setTimeout(() => setResting(false), 15000);
+  useEffect(() => { if (auto) timeFor(0); }, [auto]);
+  useEffect(() => {
+    if (!auto || reducedMotion()) return;
+    let raf = 0, last = performance.now();
+    const tick = (now: number) => {
+      const c = clock.current, el = track.current!;
+      const held = paused || c.hover || now < c.restUntil || el.matches(':focus-visible') || el.querySelector('dialog[open]');
+      if (!held) c.elapsed += Math.min(now - last, 100); // capped so a background tab doesn't skip ahead on return
+      last = now;
+      if (c.elapsed >= c.dur) go(1);
+      bar.current!.style.transform = `scaleX(${c.elapsed / c.dur})`;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [auto, paused]);
+
+  // A swipe or wheel scroll means someone is reading. Taps on buttons or inside the popup don't count.
+  const rest = (e: React.PointerEvent | React.WheelEvent) => {
+    if (!(e.target as Element).closest('button, dialog')) clock.current.restUntil = performance.now() + 15000;
   };
-  useEffect(() => () => clearTimeout(restTimer.current), []);
+  // Mouse only: a touch leaves :hover stuck on the track after the tap, which used to freeze the carousel.
+  const hover = (on: boolean) => (e: React.PointerEvent) => { if (e.pointerType === 'mouse') clock.current.hover = on; };
 
   return (
-    <div className={`carousel${paused ? ' is-paused' : ''}${resting ? ' is-resting' : ''}`}>
+    <div className="carousel">
       <div className="carousel__track" ref={track} role="region" aria-label={label} tabIndex={0}
-        onPointerDown={rest} onWheel={(e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) rest(); }}>{children}</div>
+        onPointerEnter={hover(true)} onPointerLeave={hover(false)}
+        onPointerDown={rest} onWheel={(e) => { if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) rest(e); }}>{children}</div>
       {auto && (
         <div className="carousel__controls">
-          <span className="carousel__bar" aria-hidden="true"><i ref={bar} onAnimationIteration={next} /></span>
-          <button className="btn btn--outline btn--sm" type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>
+          <button className="carousel__arrow" type="button" aria-label="Ucapan sebelumnya" onClick={() => go(-1)}>←</button>
+          <button className="carousel__arrow" type="button" aria-label="Ucapan berikutnya" onClick={() => go(1)}>→</button>
+          <span className="carousel__bar" aria-hidden="true"><i ref={bar} /></span>
+          <button className="btn btn--outline btn--sm carousel__pause" type="button" aria-pressed={paused} onClick={() => setPaused(!paused)}>
             {paused ? 'Putar' : 'Jeda'}
           </button>
         </div>

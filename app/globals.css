@@ -151,11 +151,10 @@ button, input, textarea { font: inherit; color: inherit; }
 .carousel__track:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; }
 .carousel__controls { display: flex; align-items: center; gap: 20px; }
 .carousel__bar { flex: 1; height: 2px; overflow: hidden; background: rgba(17, 18, 24, .12); }
-.carousel__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; animation: progress var(--dur, 10s) linear infinite; }
-.carousel.is-paused .carousel__bar i,
-.carousel.is-resting .carousel__bar i,
-.carousel__track:hover + .carousel__controls .carousel__bar i,
-.carousel__track:focus-visible + .carousel__controls .carousel__bar i { animation-play-state: paused; }
+.carousel__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
+.carousel__arrow { display: grid; place-items: center; width: 40px; height: 40px; border: 1px solid rgba(17, 18, 24, .2); border-radius: 50%; background: #fff; color: var(--ink); font: 400 18px/1 var(--sans); cursor: pointer; transition: border-color .2s, color .2s; }
+.carousel__arrow + .carousel__arrow { margin-left: -12px; }
+.carousel__arrow:hover { border-color: var(--gold); color: var(--gold); }
 /* cards rise in as they scroll into the track; browsers without scroll timelines just show them */
 @supports (animation-timeline: view()) {
   .carousel__track > * { animation: card-in linear both; animation-timeline: view(inline); animation-range: entry 10% entry 90%; }
@@ -166,7 +165,8 @@ button, input, textarea { font: inherit; color: inherit; }
 .card__kicker { padding-bottom: 12px; border-bottom: 1px solid rgba(17, 18, 24, .12); font: 700 10.5px/16px var(--sans); letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
 /* pre-line keeps the sender's Enter line breaks; max-height clamps to 7 lines (a block, so ::first-letter still works) */
 .card__msg { max-height: calc(1.65em * 7); overflow: hidden; font: 400 17px/1.65 var(--lora); white-space: pre-line; }
-.card__msg::first-letter { float: left; margin: 7px 10px 0 0; font: 400 58px/.8 var(--lora); color: var(--gold); }
+/* uppercase: a lowercase cap's descender (p, g, y) would run into the third line */
+.card__msg::first-letter { float: left; margin: 7px 10px 0 0; font: 400 58px/.8 var(--lora); color: var(--gold); text-transform: uppercase; }
 .is-clamped > .card__msg { -webkit-mask-image: linear-gradient(#000 65%, transparent); mask-image: linear-gradient(#000 65%, transparent); }
 .card__more { order: 1; align-self: flex-start; margin-top: -8px; padding: 4px 0; border: 0; border-bottom: 1px solid var(--gold); background: none; color: inherit; font: 700 11px/16px var(--sans); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; }
 .card__from { order: 2; display: flex; align-items: center; gap: 12px; margin-top: auto; padding-top: 8px; }
@@ -198,7 +198,8 @@ button, input, textarea { font: inherit; color: inherit; }
 
 /* full text inside the read-more popup */
 .card--full { width: min(640px, 92vw); max-height: 84vh; overflow-y: auto; padding: 32px 36px 36px; color: var(--ink); }
-.card--full .card__msg { max-height: none; font-size: 18px; }
+/* overflow: visible restores min-height:auto, otherwise the flex column shrinks the message to fit 84vh and clips it */
+.card--full .card__msg { max-height: none; overflow: visible; font-size: 18px; }
 .card--full:hover { transform: none; box-shadow: none; }
 
 /* ---------- 03 pesan ---------- */
@@ -386,7 +387,7 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
   .gallery__track { animation: none; }
   .gallery__row { overflow-x: auto; }
   .gallery__item[aria-hidden] { display: none; }
-  .carousel__controls { display: none; }
+  .carousel__bar, .carousel__pause { display: none; }
   .music.is-on span { height: 12px; }
   .carousel__track > * { animation: none; }
 }
@@ -434,6 +435,7 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
   .board__title, .idx-hero .board__title { font-size: 28px; line-height: 36px; }
   .cards--all { grid-template-columns: 1fr; }
   .carousel__track { grid-auto-columns: 86%; gap: 16px; }
+  .carousel__arrow { display: none; }
   .vgrid { grid-template-columns: minmax(0, 340px); justify-content: center; gap: 32px; }
   .vgrid > :nth-child(2) { transform: none; }
   .vgrid--all { grid-template-columns: minmax(0, 340px); }
