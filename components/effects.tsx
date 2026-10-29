@@ -264,6 +264,7 @@ export function Carousel({ children, label, auto }: { children: React.ReactNode;
  */
 export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds: number[] }) {
   const dialog = useRef<HTMLDialogElement>(null);
+  const stage = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState<number | null>(null); // null = closed
   const [paused, setPaused] = useState(false);
   const open = index !== null;
@@ -275,15 +276,35 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
     return reducedMotion() ? undefined : goldDust(dialog.current!.querySelector('canvas')!, 90);
   }, [open]);
 
-  // Auto-advance runs on a timer, not on the progress bar's animationend: Safari doesn't reliably deliver that event
-  // (and Reduce Motion shortens the animation), so the bar is only a visual. Time spent survives a pause.
+  // Auto-advance runs on a timer and the bar is painted from JS each frame. A CSS animation with var(--dur) showed up
+  // instantly full on iOS Safari, and its animationend isn't reliable there either. Time spent survives a pause.
   const spent = useRef({ index: -1, ms: 0 });
+  const bar = useRef<HTMLElement>(null);
   useEffect(() => {
     if (index === null || paused) return;
     if (spent.current.index !== index) spent.current = { index, ms: 0 };
     const start = performance.now();
     const timer = setTimeout(() => go(index + 1), seconds[index] * 1000 - spent.current.ms);
-    return () => { clearTimeout(timer); spent.current.ms += performance.now() - start; };
+
+    // A long greeting scrolls itself: holds 2 s at the top, reaches the bottom 2 s before the slide ends.
+    // Speed = distance left / time left, so a manual scroll or a pause just re-paces it.
+    const slide = stage.current!.firstElementChild as HTMLElement;
+    const autoScroll = !reducedMotion();
+    let raf = 0, last = start, pos = slide.scrollTop;
+    const frame = (now: number) => {
+      const ms = spent.current.ms + now - start;
+      bar.current!.style.transform = `scaleX(${Math.min(1, ms / (seconds[index] * 1000))})`;
+      if (autoScroll) {
+        if (Math.abs(slide.scrollTop - pos) > 2) pos = slide.scrollTop; // user scrolled; follow them
+        const timeLeft = seconds[index] * 1000 - 2000 - ms, left = slide.scrollHeight - slide.clientHeight - pos;
+        // pos keeps the fractional part: Chrome rounds scrollTop, so sub-pixel steps would never move.
+        if (ms > 2000 && left > 0 && timeLeft > 0) slide.scrollTop = pos += left * Math.min(1, (now - last) / timeLeft);
+      }
+      last = now;
+      raf = requestAnimationFrame(frame);
+    };
+    raf = requestAnimationFrame(frame);
+    return () => { clearTimeout(timer); cancelAnimationFrame(raf); spent.current.ms += performance.now() - start; };
   }, [index, paused]);
 
   return (
@@ -292,7 +313,7 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
         Putar semua ucapan
       </button>
       {open && (
-        <dialog className={paused ? 'story is-paused' : 'story'} ref={dialog} aria-label="Mode cerita: ucapan untuk Papih"
+        <dialog className="story" ref={dialog} aria-label="Mode cerita: ucapan untuk Papih"
           onClose={() => { setIndex(null); setPaused(false); }}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight') go(index + 1);
@@ -304,7 +325,7 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
             <div className="story__bar" aria-hidden="true">
               {slides.map((_, k) => (
                 <span key={k} className={k < index ? 'is-done' : undefined}>
-                  {k === index && <i key={index} style={{ '--dur': `${seconds[k]}s` } as React.CSSProperties} />}
+                  {k === index && <i key={index} ref={bar} />}
                 </span>
               ))}
             </div>
@@ -314,7 +335,7 @@ export function Story({ slides, seconds }: { slides: React.ReactNode[]; seconds:
               <button type="button" onClick={() => dialog.current?.close()}>Tutup ✕</button>
             </div>
           </div>
-          <div className="story__stage" aria-live="polite" onClick={(e) => {
+          <div className="story__stage" ref={stage} aria-live="polite" onClick={(e) => {
             const r = e.currentTarget.getBoundingClientRect();
             go(e.clientX - r.left < r.width / 3 ? index - 1 : index + 1);
           }}>

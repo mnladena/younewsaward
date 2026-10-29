@@ -47,14 +47,14 @@ export function GreetingCard({ g }: { g: G }) {
   return <Clipping label={`Ucapan dari ${g.name || 'Anonim'}`}><GreetingBody g={g} /></Clipping>;
 }
 
-/** "Putar semua ucapan": every greeting full screen, one at a time; each shows ~3 words/s (6–20 s). */
+/** "Putar semua ucapan": every greeting full screen, one at a time; each shows ~3 words/s (6–40 s, long ones auto-scroll). */
 export function GreetingStory({ greetings }: { greetings: G[] }) {
   return (
     <Story
       slides={greetings.map((g, i) => (
         <div key={i} className={g.message.length > 400 ? 'story__slide is-long' : 'story__slide'}><GreetingBody g={g} /></div>
       ))}
-      seconds={greetings.map((g) => Math.min(20, Math.max(6, g.message.split(/\s+/).length / 3)))}
+      seconds={greetings.map((g) => Math.min(40, Math.max(6, g.message.split(/\s+/).length / 3)))}
     />
   );
 }

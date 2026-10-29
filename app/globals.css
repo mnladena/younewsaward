@@ -181,13 +181,14 @@ button, input, textarea { font: inherit; color: inherit; }
 .story__bar { display: flex; gap: 4px; }
 .story__bar span { flex: 1; height: 3px; overflow: hidden; border-radius: 2px; background: rgba(245, 240, 229, .22); }
 .story__bar span.is-done { background: var(--gold); }
-.story__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; animation: progress var(--dur) linear forwards; }
-.story.is-paused .story__bar i { animation-play-state: paused; }
+.story__bar i { display: block; height: 100%; background: var(--gold); transform-origin: left; transform: scaleX(0); }
 .story__top { display: flex; align-items: center; gap: 24px; }
 .story__count { flex: 1; font: 700 11.52px/17.28px var(--sans); letter-spacing: .22em; color: var(--gold-light); }
 .story__top button { padding: 10px 0; border: 0; background: none; color: var(--gold-light); font: 700 11.52px/17.28px var(--sans); letter-spacing: .22em; text-transform: uppercase; cursor: pointer; }
 .story__stage { position: relative; display: grid; place-items: center; min-height: 0; padding: 24px var(--gutter) 56px; cursor: pointer; user-select: none; }
-.story__slide { width: min(780px, 100%); max-height: 100%; overflow-y: auto; animation: fade-up .7s var(--ease-out) both; }
+/* scrollbar hidden: long slides auto-scroll (wheel/touch still work) */
+.story__slide { width: min(780px, 100%); max-height: 100%; overflow-y: auto; scrollbar-width: none; animation: fade-up .7s var(--ease-out) both; }
+.story__slide::-webkit-scrollbar { display: none; }
 .story .card__kicker { margin-bottom: 24px; border-bottom-color: rgba(245, 240, 229, .16); color: rgba(245, 240, 229, .6); }
 .story .card__msg { max-height: none; font-size: clamp(22px, 2.6vw, 34px); line-height: 1.5; }
 .story .card__msg::first-letter { margin: .1em .14em 0 0; font-size: 3.1em; }
@@ -361,7 +362,6 @@ html.js:not(.intro-skip):has(.intro:not(.is-leaving)) { overflow: hidden; }
 
 /* ---------- keyframes ---------- */
 @keyframes marquee { to { transform: translateX(-50%); } }
-@keyframes progress { from { transform: scaleX(0); } }
 @keyframes eq { to { height: 16px; } }
 @keyframes modal-in { from { opacity: 0; transform: translateY(24px) scale(.96); } }
 @keyframes card-in { from { opacity: 0; translate: 0 18px; scale: .96; } }
