@@ -283,10 +283,12 @@ export function Carousel({
   children,
   label,
   auto,
+  item = "Ucapan",
 }: {
   children: React.ReactNode;
   label: string;
   auto: boolean;
+  item?: string;
 }) {
   const track = useRef<HTMLDivElement>(null);
   const bar = useRef<HTMLElement>(null);
@@ -404,7 +406,7 @@ export function Carousel({
           <button
             className="carousel__arrow"
             type="button"
-            aria-label="Ucapan sebelumnya"
+            aria-label={`${item} sebelumnya`}
             onClick={() => go(-1)}
           >
             ←
@@ -412,7 +414,7 @@ export function Carousel({
           <button
             className="carousel__arrow"
             type="button"
-            aria-label="Ucapan berikutnya"
+            aria-label={`${item} berikutnya`}
             onClick={() => go(1)}
           >
             →
@@ -637,6 +639,56 @@ export function Clipping({
         </dialog>
       )}
     </article>
+  );
+}
+
+/** Gallery photo (thumbnail passed as children) that opens full size in a modal <dialog>. */
+export function PhotoPopup({
+  src,
+  alt,
+  children,
+}: {
+  src: string;
+  alt: string;
+  children: React.ReactNode;
+}) {
+  const dialog = useRef<HTMLDialogElement>(null);
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (open) dialog.current?.showModal();
+  }, [open]);
+
+  return (
+    <>
+      <button
+        className="photo__btn"
+        type="button"
+        onClick={() => setOpen(true)}
+        aria-label={`Perbesar foto: ${alt}`}
+      >
+        {children}
+      </button>
+      {open && (
+        <dialog
+          className="vmodal"
+          ref={dialog}
+          aria-label={alt}
+          onClose={() => setOpen(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) e.currentTarget.close();
+          }}
+        >
+          <button
+            className="vmodal__close"
+            type="button"
+            onClick={() => dialog.current?.close()}
+          >
+            Tutup ✕
+          </button>
+          <img className="vmodal__media" src={src} alt={alt} />
+        </dialog>
+      )}
+    </>
   );
 }
 

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { GuestbookForm } from '@/components/GuestbookForm';
 import { Carousel, Hero, LoadingScreen } from '@/components/effects';
-import { Footer, Gallery, GreetingCard, HomeVideoCard, Logo, fillSlots } from '@/components/site';
+import { AwardGallery, Footer, Gallery, GreetingCard, HomeVideoCard, Logo, Nominasi, fillSlots } from '@/components/site';
 import { sql, type Greeting, type Video } from '@/lib/db';
 
 // Static page, refreshed by revalidatePath() whenever admin approves a greeting or edits videos.
@@ -23,11 +23,13 @@ export default async function Home() {
       <main>
         <Hero />
         <Gallery />
+        <Nominasi />
+        <AwardGallery />
 
         <section className="cerita" id="cerita">
           <div className="container">
             <div className="sec-head">
-              <p className="eyebrow">Liputan Utama · 02</p>
+              <p className="eyebrow">Liputan Utama · 04</p>
               <h2 className="display">Ternyata, Banyak<br />Cerita tentang <em>Papih.</em></h2>
               <p className="sec-head__lede">Dari yang sudah bareng Papih sejak lama sampai yang baru beberapa tahun kenal, semua punya cerita masing-masing.</p>
             </div>
@@ -64,7 +66,7 @@ export default async function Home() {
         <section className="pesan" id="pesan">
           <div className="container">
             <div className="sec-head">
-              <p className="eyebrow">Pesan dalam Gambar · 03</p>
+              <p className="eyebrow">Pesan dalam Gambar · 05</p>
               <h2 className="display">Ada Pesan Spesial<br />buat <em>Papih.</em></h2>
               <p className="sec-head__lede">Ucapan, cerita, dan sedikit pesan dari teman-teman yang pengin menyampaikan sesuatu langsung ke Papih.</p>
             </div>
@@ -81,7 +83,7 @@ export default async function Home() {
         <section className="tamu" id="buku-tamu">
           <div className="container tamu__grid">
             <div>
-              <p className="eyebrow">Buku Tamu Digital · 04</p>
+              <p className="eyebrow">Buku Tamu Digital · 06</p>
               <h2 className="display">Papih,<br />Ada Pesan Nih!</h2>
               <p className="tamu__lede">Ucapan singkat, kenangan seru, ucapan terima kasih, atau doa buat perjalanan berikutnya—semuanya boleh.</p>
               <div className="tamu__safe">
@@ -95,7 +97,7 @@ export default async function Home() {
 
         <section className="penutup">
           <div className="container">
-            <p className="eyebrow">Catatan Penutup · 05</p>
+            <p className="eyebrow">Catatan Penutup · 07</p>
             <h2 className="display">Cerita Bareng Papih<br />Nggak Berhenti <em>di Sini.</em></h2>
             <p className="penutup__text">Makasih sudah jadi bagian dari perjalanan kita. Sekarang waktunya Papih bikin cerita-cerita baru di luar kantor. Jangan lupa mampir dan kasih kabar, ya!</p>
             <a className="btn btn--gold" href="#buku-tamu">Kirim Satu Ucapan Lagi</a>

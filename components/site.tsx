@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Clipping, Story, VideoPopup } from '@/components/effects';
+import { Carousel, Clipping, PhotoPopup, Story, VideoPopup } from '@/components/effects';
 import type { Greeting, Video } from '@/lib/db';
 
 export const Logo = ({ alt = 'YOU-NEWS AWARD' }: { alt?: string }) => (
@@ -86,6 +86,74 @@ export function Gallery() {
           </div>
         );
       })}
+    </section>
+  );
+}
+
+const BUMPER = 'https://youtu.be/MuZKxyx1V5s';
+const NOMINATIONS = [
+  ['Gaul', 'https://youtu.be/JKGGVEjE0W8'],
+  ['Gondrong', 'https://youtu.be/nY3rnaTLYAg'],
+  ['Paling Senior', 'https://youtu.be/jHiOQERvqVo'],
+  ['Candy Crush', 'https://youtu.be/PEhoZM8Rd3M'],
+  ['Life Time', 'https://youtu.be/Ta_bFtv4N34'],
+];
+
+/** Award-night videos: the bumper VT up top, then one 16:9 card per nomination category. */
+export function Nominasi() {
+  return (
+    <section className="nominasi" id="nominasi">
+      <div className="container">
+        <div className="sec-head">
+          <p className="eyebrow">Malam Penghargaan · 02</p>
+          <h2 className="display">Nominasi &amp;<br />Pemenang <em>Award.</em></h2>
+          <p className="sec-head__lede">Siapa yang paling gaul, paling gondrong, sampai paling setia? Ini dia para nominasi YOU-NEWS AWARD.</p>
+        </div>
+        <article className="vcard nominasi__bumper">
+          <div className="vframe vframe--h"><VideoPopup url={BUMPER} title="Bumper VT YOU-NEWS AWARD" poster={null} /></div>
+          <div className="vcard__meta">
+            <h3 className="vcard__title">Bumper VT YOU-NEWS AWARD</h3>
+            <p className="vcard__sub">Pembuka malam penghargaan</p>
+          </div>
+        </article>
+        <div className="vgrid vgrid--h">
+          {NOMINATIONS.map(([cat, url]) => (
+            <article className="vcard" key={cat}>
+              <div className="vframe vframe--h"><VideoPopup url={url} title={`Nominasi Kategori ${cat}`} poster={null} /></div>
+              <div className="vcard__meta">
+                <h3 className="vcard__title">Kategori {cat}</h3>
+                <p className="vcard__sub">Nominasi</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// New photo: drop it in public/assets/award/ and add its file name here. Thumbnails are cropped to one ratio, the popup shows it whole.
+const AWARD_PHOTOS = ['award-01.jpg', 'award-02.jpg', 'award-03.jpg'];
+
+export function AwardGallery() {
+  return (
+    <section className="agallery" id="galeri-award">
+      <div className="container">
+        <div className="sec-head">
+          <p className="eyebrow">Galeri Award · 03</p>
+          <h2 className="display">Momen di Malam<br /><em>YOU-NEWS AWARD.</em></h2>
+          <p className="sec-head__lede">Senyum, pose, dan kebersamaan yang terekam malam itu.</p>
+        </div>
+        <Carousel label="Galeri foto YOU-NEWS AWARD" item="Foto" auto>
+          {AWARD_PHOTOS.map((f) => (
+            <figure className="gallery__item" key={f}>
+              <PhotoPopup src={`/assets/award/${f}`} alt="Foto di malam YOU-NEWS AWARD">
+                <Image src={`/assets/award/${f}`} alt="" width={1280} height={760} sizes="(max-width: 760px) 86vw, 380px" />
+              </PhotoPopup>
+            </figure>
+          ))}
+        </Carousel>
+      </div>
     </section>
   );
 }
